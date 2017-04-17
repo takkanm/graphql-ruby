@@ -71,6 +71,10 @@ module GraphQL
         )
       end
 
+      def to_h
+        @values
+      end
+
       class FieldResolutionContext
         extend Forwardable
 
