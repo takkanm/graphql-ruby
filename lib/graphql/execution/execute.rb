@@ -13,7 +13,7 @@ module GraphQL
           query.irep_selection,
           query.context,
           mutation: query.mutation?,
-          subscription: query.subscription?,
+          subscription_update: query.subscription_update?,
         )
 
         GraphQL::Execution::Lazy.resolve(result)
@@ -23,14 +23,13 @@ module GraphQL
 
       private
 
-      def resolve_selection(object, current_type, selection, query_ctx, mutation: false, subscription: false)
+      def resolve_selection(object, current_type, selection, query_ctx, mutation: false, subscription_update: false)
         selection_result = SelectionResult.new
+        query = query_ctx.query
 
         selection.typed_children[current_type].each do |name, subselection|
           # Can't `break` because technically multiple fields could match
-          # TODO: make sure it matches the _right_ root field in the
-          # case that there are multiple with the same name but different arguments
-          if subscription && query_ctx.query.subscription_name && name != query_ctx.query.subscription_name
+          if subscription_update && query.subscription_key != subselection.subscription_key
             next
           end
 
