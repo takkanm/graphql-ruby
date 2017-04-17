@@ -75,8 +75,10 @@ describe GraphQL::Query::Context do
   describe "empty values" do
     let(:context) { GraphQL::Query::Context.new(query: OpenStruct.new(schema: schema), values: nil) }
 
-    it "returns nil for any key" do
+    it "returns returns nil and reports key? => false" do
       assert_equal(nil, context[:some_key])
+      assert_equal(false, context.key?(:some_key))
+      assert_raises(KeyError) { context.fetch(:some_key) }
     end
   end
 

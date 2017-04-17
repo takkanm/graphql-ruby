@@ -4,6 +4,8 @@ module GraphQL
     # Expose some query-specific info to field resolve functions.
     # It delegates `[]` to the hash that's passed to `GraphQL::Query#initialize`.
     class Context
+      extend Forwardable
+
       attr_reader :execution_strategy
       # `strategy` is required by GraphQL::Batch
       alias_method :strategy, :execution_strategy
@@ -46,20 +48,18 @@ module GraphQL
         @path = []
       end
 
-      # Lookup `key` from the hash passed to {Schema#execute} as `context:`
-      def [](key)
-        @values[key]
-      end
+      # @!method [](key)
+      #   Lookup `key` from the hash passed to {Schema#execute} as `context:`
 
       # @return [GraphQL::Schema::Warden]
       def warden
         @warden ||= @query.warden
       end
 
-      # Reassign `key` to the hash passed to {Schema#execute} as `context:`
-      def []=(key, value)
-        @values[key] = value
-      end
+      # @!method []=(key, value)
+      #   Reassign `key` to the hash passed to {Schema#execute} as `context:`
+
+      def_delegators :@values, :[], :[]=, :to_h, :key?, :fetch
 
       def spawn(key:, selection:, parent_type:, field:)
         FieldResolutionContext.new(
@@ -69,10 +69,6 @@ module GraphQL
           parent_type: parent_type,
           field: field,
         )
-      end
-
-      def to_h
-        @values
       end
 
       class FieldResolutionContext
@@ -88,7 +84,10 @@ module GraphQL
           @parent_type = parent_type
         end
 
-        def_delegators :@context, :[], :[]=, :spawn, :query, :schema, :warden, :errors, :execution_strategy, :strategy
+        def_delegators :@context,
+          :[], :[]=, :to_h, :key?, :fetch,
+          :spawn, :query, :schema,
+          :warden, :errors, :execution_strategy, :strategy
 
         # @return [GraphQL::Language::Nodes::Field] The AST node for the currently-executing field
         def ast_node
