@@ -4,7 +4,10 @@ module GraphQL
     # A valid execution strategy
     # @api private
     class Execute
-      PROPAGATE_NULL = :__graphql_propagate_null__
+      # @api private
+      SKIP = Object.new
+      # @api private
+      PROPAGATE_NULL = Object.new
 
       def execute(ast_operation, root_type, query)
         result = resolve_selection(
@@ -25,14 +28,8 @@ module GraphQL
 
       def resolve_selection(object, current_type, selection, query_ctx, mutation: false, subscription_update: false)
         selection_result = SelectionResult.new
-        query = query_ctx.query
 
         selection.typed_children[current_type].each do |name, subselection|
-          # Can't `break` because technically multiple fields could match
-          if subscription_update && query.subscription_key != subselection.subscription_key
-            next
-          end
-
           field_result = resolve_field(
             selection_result,
             subselection,
@@ -41,6 +38,10 @@ module GraphQL
             object,
             query_ctx
           )
+
+          if field_result == SKIP
+            next
+          end
 
           if mutation
             GraphQL::Execution::Lazy.resolve(field_result)
@@ -145,6 +146,8 @@ module GraphQL
           else
             nil
           end
+        elsif value == SKIP
+          value
         else
           case field_type.kind
           when GraphQL::TypeKinds::SCALAR
