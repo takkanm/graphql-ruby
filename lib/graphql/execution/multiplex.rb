@@ -47,6 +47,7 @@ module GraphQL
           # First, run multiplex instrumentation, then query instrumentation for each query
           multiplex_instrumenters.each { |i| i.before_multiplex(multiplex) }
           queries.each do |query|
+            query.multiplex = multiplex
             query_instrumenters.each { |i| i.before_query(query) }
           end
 

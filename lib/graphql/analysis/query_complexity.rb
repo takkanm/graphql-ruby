@@ -20,9 +20,15 @@ module GraphQL
       # - `query` is needed for variables, then passed to handler
       # - `complexities_on_type` holds complexity scores for each type in an IRep node
       def initial_value(query)
+        complexities_on_type = if query.multiplex
+          query.multiplex.context[:complexities_on_type] ||= [TypeComplexity.new]
+        else
+          # TODO shouldn't need this fallback
+          [TypeComplexity.new]
+        end
         {
           query: query,
-          complexities_on_type: [TypeComplexity.new],
+          complexities_on_type: complexities_on_type,
         }
       end
 
@@ -44,7 +50,7 @@ module GraphQL
       # Send the query and complexity to the block
       # @return [Object, GraphQL::AnalysisError] Whatever the handler returns
       def final_value(reduced_value)
-        total_complexity = reduced_value[:complexities_on_type].pop.max_possible_complexity
+        total_complexity = reduced_value[:complexities_on_type].last.max_possible_complexity
         @complexity_handler.call(reduced_value[:query], total_complexity)
       end
 

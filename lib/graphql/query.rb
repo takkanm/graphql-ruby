@@ -29,6 +29,12 @@ module GraphQL
 
     attr_reader :schema, :document, :context, :fragments, :operations, :root_value, :query_string, :warden, :provided_variables
 
+    # @return [GraphQL::Execution::Multiplex] the umbrella multiplex for this query
+    attr_reader :multiplex
+
+    # @api private
+    attr_writer :multiplex
+
     # Prepare query `query_string` on `schema`
     # @param schema [GraphQL::Schema]
     # @param query_string [String]

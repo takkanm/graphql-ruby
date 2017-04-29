@@ -30,6 +30,20 @@ describe GraphQL::Analysis::MaxQueryComplexity do
     it "returns an error" do
       assert_equal "Query has complexity of 10, which exceeds max complexity of 9", result["errors"][0]["message"]
     end
+
+    describe "across a multiplex" do
+      focus
+      it "returns an error" do
+        queries = 5.times.map { |n|  { query: "{ cheese(id: #{n}) { id } }" } }
+        results = Dummy::Schema.multiplex(queries)
+        assert_equal 5, results.length
+        pp results
+        err_msg = "Query has complexity of 10, which exceeds max complexity of 9"
+        results.each do |res|
+          assert_equal err_msg, res["errors"][0]["message"]
+        end
+      end
+    end
   end
 
   describe "when there is no max complexity" do
