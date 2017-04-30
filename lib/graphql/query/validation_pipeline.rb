@@ -52,6 +52,12 @@ module GraphQL
         @internal_representation
       end
 
+      # @return [Array]
+      def analyzers
+        ensure_has_validated
+        @analyzers ||= []
+      end
+
       private
 
       # If the pipeline wasn't run yet, run it.
@@ -80,9 +86,9 @@ module GraphQL
           end
 
           if @validation_errors.none?
-            query_analyzers = build_analyzers(@schema, @max_depth, @max_complexity)
-            if query_analyzers.any?
-              analysis_results = GraphQL::Analysis.analyze_query(@query, query_analyzers)
+            @analyzers = build_analyzers(@schema, @max_depth, @max_complexity)
+            if @analyzers.any?
+              analysis_results = GraphQL::Analysis.analyze_query(@query, @analyzers)
               @analysis_errors = analysis_results
                 .flatten # accept n-dimensional array
                 .select { |r| r.is_a?(GraphQL::AnalysisError) }

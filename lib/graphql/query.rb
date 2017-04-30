@@ -172,7 +172,7 @@ module GraphQL
     # @return [GraphQL::Language::Nodes::Document, nil]
     attr_reader :selected_operation
 
-    def_delegators :@validation_pipeline, :valid?, :analysis_errors, :validation_errors, :internal_representation
+    def_delegators :@validation_pipeline, :analyzers, :valid?, :analysis_errors, :validation_errors, :internal_representation
 
     def_delegators :@warden, :get_type, :get_field, :possible_types, :root_type_for_operation
 

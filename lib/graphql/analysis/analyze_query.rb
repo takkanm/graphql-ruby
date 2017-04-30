@@ -2,6 +2,17 @@
 module GraphQL
   module Analysis
     module_function
+
+    def analyze_multiplex(multiplex, multiplex_analyzers:, query_analyzers:)
+      reducer_states = multiplex_analyzers.map { |r| ReducerState.new(r, multiplex) }
+      queries_results = multiplex.queries.map do |query|
+        analyze_query(query, query.analyzers, multiplex_states: reducer_states)
+      end
+
+      multiplex_results = reducer_states.map(&:finalize_reducer)
+      return multiplex_results, queries_results
+    end
+
     # Visit `query`'s internal representation, calling `analyzers` along the way.
     #
     # - First, query analyzers are initialized by calling `.initial_value(query)`, if they respond to that method.
@@ -12,9 +23,11 @@ module GraphQL
     #
     # @param query [GraphQL::Query]
     # @param analyzers [Array<#call>] Objects that respond to `#call(memo, visit_type, irep_node)`
+    # @param multiplex_states [Array<ReducerState>] Already-prepared states for multiplex-level analyzers
     # @return [Array<Any>] Results from those analyzers
-    def analyze_query(query, analyzers)
+    def analyze_query(query, analyzers, multiplex_states: [])
       reducer_states = analyzers.map { |r| ReducerState.new(r, query) }
+      reducer_states.concat(multiplex_states)
 
       irep = query.internal_representation
 
